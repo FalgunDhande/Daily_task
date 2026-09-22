@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Daily Tracker{% endblock %}
+{% block page_title %}<span id="greetingTitle">Dashboard</span>{% endblock %}
+{% block content %}
+<div class="streak-banner">
+  <i class="fa-solid fa-fire" style="font-size:2rem;"></i>
+  <div class="streak-item"><span class="num" id="currentStreak">0</span><span class="lbl">Day Streak</span></div>
+  <div class="streak-item"><span class="num" id="dashDailyPct">0%</span><span class="lbl">Today's Progress</span></div>
+  <div class="streak-item"><span class="num" id="dashMonthlyPct">0%</span><span class="lbl">Monthly Completion</span></div>
+</div>
+
+<div class="stats-grid" id="statsGrid"></div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h3>Today's Progress</h3></div>
+    <div class="progress-track"><div class="progress-fill" id="dashProgressFill" style="width:0%"></div></div>
+    <div class="progress-label"><span id="dashCompletedCount">0 completed</span><span id="dashPendingCount">0 pending</span></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>This Week</h3></div>
+    <canvas id="weekChart" height="120"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3>Today's Tasks</h3>
+    <a href="{{ url_for('views.today') }}" class="btn btn-ghost btn-sm">View full day</a>
+  </div>
+  <div class="task-list" id="dashTaskList"><div class="loader"><div class="spinner"></div>Loading...</div></div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>{% endblock %}

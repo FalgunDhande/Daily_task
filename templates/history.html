@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}History - Daily Tracker{% endblock %}
+{% block page_title %}History{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>Recent Activity</h3>
+    <select id="historyRange">
+      <option value="7">Last 7 days</option>
+      <option value="30" selected>Last 30 days</option>
+      <option value="90">Last 90 days</option>
+    </select>
+  </div>
+  <div id="historyContainer"><div class="loader"><div class="spinner"></div>Loading...</div></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function loadHistory() {
+  const days = document.getElementById('historyRange').value;
+  const container = document.getElementById('historyContainer');
+  const entries = await API.get(`/api/history?days=${days}`);
+  if (entries.length === 0) {
+    container.innerHTML = `<div class="empty-state"><i class="fa-solid fa-clock-rotate-left"></i>No activity yet.</div>`;
+    return;
+  }
+  container.innerHTML = entries.map(e => `
+    <div class="history-day">
+      <h4>${formatDate(e.date)}</h4>
+      ${e.completed.map(t => `<div class="history-item done"><i class="fa-solid fa-circle-check"></i> Completed ${t}</div>`).join('')}
+      ${e.missed.map(t => `<div class="history-item missed"><i class="fa-solid fa-circle-xmark"></i> Missed ${t}</div>`).join('')}
+    </div>
+  `).join('');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  loadHistory().catch(err => Toast(err.message, 'error'));
+  document.getElementById('historyRange').addEventListener('change', () => loadHistory().catch(err => Toast(err.message, 'error')));
+});
+document.addEventListener('task:changed', () => loadHistory().catch(err => Toast(err.message, 'error')));
+</script>
+{% endblock %}

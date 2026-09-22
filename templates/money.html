@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+{% block title %}Money - Daily Tracker{% endblock %}
+{% block page_title %}Money Management{% endblock %}
+{% block content %}
+
+<!-- ── Sub-navigation tabs ────────────────────────────────────────────── -->
+<div class="money-tabs" id="moneyTabs">
+  <button class="money-tab active" data-view="dashboard"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></button>
+  <button class="money-tab" data-view="daily"><i class="fa-solid fa-calendar-day"></i><span>Daily</span></button>
+  <button class="money-tab" data-view="transactions"><i class="fa-solid fa-receipt"></i><span>Transactions</span></button>
+  <button class="money-tab" data-view="calendar"><i class="fa-regular fa-calendar"></i><span>Calendar</span></button>
+  <button class="money-tab" data-view="budgets"><i class="fa-solid fa-chart-pie"></i><span>Budgets</span></button>
+  <button class="money-tab" data-view="goals"><i class="fa-solid fa-bullseye"></i><span>Goals</span></button>
+  <button class="money-tab" data-view="recurring"><i class="fa-solid fa-rotate"></i><span>Recurring</span></button>
+  <button class="money-tab" data-view="analytics"><i class="fa-solid fa-chart-line"></i><span>Analytics</span></button>
+</div>
+
+<!-- ── Quick action buttons ───────────────────────────────────────────── -->
+<div class="money-quick-actions" id="moneyQuickActions">
+  <button class="btn btn-primary" id="quickAddExpense"><i class="fa-solid fa-minus"></i> Add Expense</button>
+  <button class="btn btn-success" id="quickAddIncome"><i class="fa-solid fa-plus"></i> Add Income</button>
+  <button class="btn btn-ghost" id="quickAddBudget"><i class="fa-solid fa-chart-pie"></i> Set Budget</button>
+  <button class="btn btn-ghost" id="quickAddGoal"><i class="fa-solid fa-bullseye"></i> Add Goal</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     VIEWS (only one visible at a time)
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<!-- Dashboard -->
+<div class="money-view active" id="view-dashboard">
+  <div class="money-overview-header" id="moneyOverviewHeader"></div>
+  <div class="stats-grid money-stats" id="moneyStatsGrid"></div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><h3>Budget Progress</h3></div>
+      <div id="dashBudgetProgress">
+        <div class="empty-state"><i class="fa-solid fa-chart-pie"></i>No budget set for this month</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Daily Spending Limit</h3></div>
+      <div id="dashDailyLimit"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3><i class="fa-solid fa-lightbulb"></i> Insights</h3></div>
+    <div id="dashInsights" class="insights-list"></div>
+  </div>
+</div>
+
+<!-- Daily Spending -->
+<div class="money-view" id="view-daily">
+  <div class="daily-nav">
+    <button class="btn btn-ghost btn-sm" id="dailyPrev"><i class="fa-solid fa-chevron-left"></i></button>
+    <h3 id="dailyDateTitle">Today</h3>
+    <button class="btn btn-ghost btn-sm" id="dailyNext"><i class="fa-solid fa-chevron-right"></i></button>
+    <input type="date" id="dailyDatePicker" class="daily-date-input">
+  </div>
+  <div class="daily-summary-cards" id="dailySummary"></div>
+  <div class="card">
+    <div class="card-header"><h3>Category Breakdown</h3></div>
+    <div id="dailyCategoryBreakdown"></div>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Transactions</h3></div>
+    <div id="dailyTransactionList" class="txn-list"></div>
+  </div>
+</div>
+
+<!-- Transactions -->
+<div class="money-view" id="view-transactions">
+  <div class="filters-bar money-filters">
+    <div class="search-input-wrap">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" id="txnSearch" placeholder="Search transactions...">
+    </div>
+    <select id="txnTypeFilter">
+      <option value="">All Types</option>
+      <option value="expense">Expense</option>
+      <option value="income">Income</option>
+    </select>
+    <select id="txnCategoryFilter">
+      <option value="">All Categories</option>
+    </select>
+    <select id="txnPaymentFilter">
+      <option value="">All Payments</option>
+    </select>
+    <input type="date" id="txnDateFrom" placeholder="From">
+    <input type="date" id="txnDateTo" placeholder="To">
+    <select id="txnSort">
+      <option value="newest">Newest</option>
+      <option value="oldest">Oldest</option>
+      <option value="highest">Highest</option>
+      <option value="lowest">Lowest</option>
+    </select>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h3 id="txnResultCount">Transactions</h3>
+      <div class="txn-export-btns">
+        <button class="btn btn-ghost btn-sm" id="exportCsv"><i class="fa-solid fa-file-csv"></i> CSV</button>
+        <button class="btn btn-ghost btn-sm" id="exportXlsx"><i class="fa-solid fa-file-excel"></i> Excel</button>
+      </div>
+    </div>
+    <div class="txn-table-wrap">
+      <table class="txn-table" id="txnTable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Category</th>
+            <th>Type</th>
+            <th>Payment</th>
+            <th class="text-right">Amount</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="txnTableBody"></tbody>
+      </table>
+    </div>
+    <div class="txn-pagination" id="txnPagination"></div>
+  </div>
+</div>
+
+<!-- Calendar -->
+<div class="money-view" id="view-calendar">
+  <div class="cal-nav">
+    <button class="btn btn-ghost btn-sm" id="calMoneyPrev"><i class="fa-solid fa-chevron-left"></i></button>
+    <h3 id="calMoneyTitle">September 2026</h3>
+    <button class="btn btn-ghost btn-sm" id="calMoneyNext"><i class="fa-solid fa-chevron-right"></i></button>
+    <button class="btn btn-ghost btn-sm" id="calMoneyToday">Today</button>
+  </div>
+  <div class="money-calendar-grid" id="moneyCalendarGrid"></div>
+</div>
+
+<!-- Budgets -->
+<div class="money-view" id="view-budgets">
+  <div class="cal-nav">
+    <button class="btn btn-ghost btn-sm" id="budgetPrevMonth"><i class="fa-solid fa-chevron-left"></i></button>
+    <h3 id="budgetMonthTitle">September 2026</h3>
+    <button class="btn btn-ghost btn-sm" id="budgetNextMonth"><i class="fa-solid fa-chevron-right"></i></button>
+  </div>
+  <div id="budgetContent">
+    <div class="empty-state"><i class="fa-solid fa-chart-pie"></i>No budget set. Click "Set Budget" to get started.</div>
+  </div>
+</div>
+
+<!-- Savings Goals -->
+<div class="money-view" id="view-goals">
+  <div class="card-header" style="margin-bottom:16px;">
+    <h3>Savings Goals</h3>
+    <button class="btn btn-primary btn-sm" id="addGoalBtn"><i class="fa-solid fa-plus"></i> New Goal</button>
+  </div>
+  <div id="goalsList"></div>
+</div>
+
+<!-- Recurring -->
+<div class="money-view" id="view-recurring">
+  <div class="card-header" style="margin-bottom:16px;">
+    <h3>Recurring Expenses</h3>
+    <button class="btn btn-primary btn-sm" id="addRecurringBtn"><i class="fa-solid fa-plus"></i> Add Recurring</button>
+  </div>
+  <div id="recurringList"></div>
+</div>
+
+<!-- Analytics -->
+<div class="money-view" id="view-analytics">
+  <div class="cal-nav" style="margin-bottom:20px;">
+    <button class="btn btn-ghost btn-sm" id="analyticsPrev"><i class="fa-solid fa-chevron-left"></i></button>
+    <h3 id="analyticsMonthTitle">September 2026</h3>
+    <button class="btn btn-ghost btn-sm" id="analyticsNext"><i class="fa-solid fa-chevron-right"></i></button>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><h3>Expenses by Category</h3></div><canvas id="catPieChart" height="260"></canvas></div>
+    <div class="card"><div class="card-header"><h3>Daily Spending</h3></div><canvas id="dailyBarChart" height="260"></canvas></div>
+  </div>
+  <div class="grid-2">
+    <div class="card"><div class="card-header"><h3>Monthly Comparison</h3></div><canvas id="monthCompareChart" height="260"></canvas></div>
+    <div class="card"><div class="card-header"><h3>Payment Methods</h3></div><canvas id="paymentPieChart" height="260"></canvas></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     MODALS
+     ══════════════════════════════════════════════════════════════════════ -->
+
+<!-- Add/Edit Transaction Modal -->
+<div class="modal-overlay" id="txnModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="txnModalTitle">Add Expense</h3>
+      <button class="icon-btn" id="closeTxnModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="txnForm" class="modal-body">
+      <input type="hidden" id="txnId" value="">
+      <input type="hidden" id="txnType" value="expense">
+      <label>Amount (₹)
+        <div class="amount-input-wrap">
+          <span class="amount-prefix">₹</span>
+          <input type="number" id="txnAmount" step="0.01" min="0.01" required placeholder="0.00">
+        </div>
+      </label>
+      <label>Description
+        <input type="text" id="txnDescription" placeholder="What was this for?">
+      </label>
+      <div class="form-row">
+        <label>Category
+          <select id="txnCategory"></select>
+        </label>
+        <label>Payment Method
+          <select id="txnPayment"></select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Date
+          <input type="date" id="txnDate" required>
+        </label>
+        <label>Time
+          <input type="time" id="txnTime">
+        </label>
+      </div>
+      <label>Notes
+        <textarea id="txnNotes" rows="2" placeholder="Optional notes..."></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelTxnBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveTxnBtn">Add Expense</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Budget Modal -->
+<div class="modal-overlay" id="budgetModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Set Monthly Budget</h3>
+      <button class="icon-btn" id="closeBudgetModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="budgetForm" class="modal-body">
+      <label>Total Monthly Budget (₹)
+        <div class="amount-input-wrap">
+          <span class="amount-prefix">₹</span>
+          <input type="number" id="budgetAmount" step="0.01" min="0.01" required placeholder="20000">
+        </div>
+      </label>
+      <h4 style="margin:8px 0 4px;font-size:.88rem;color:var(--text-muted);">Category Budgets (optional)</h4>
+      <div id="budgetCategoryList" class="budget-cat-list"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelBudgetBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Budget</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Goal Modal -->
+<div class="modal-overlay" id="goalModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="goalModalTitle">New Savings Goal</h3>
+      <button class="icon-btn" id="closeGoalModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="goalForm" class="modal-body">
+      <input type="hidden" id="goalId" value="">
+      <label>Goal Name
+        <input type="text" id="goalName" required placeholder="e.g. Laptop">
+      </label>
+      <div class="form-row">
+        <label>Target Amount (₹)
+          <div class="amount-input-wrap">
+            <span class="amount-prefix">₹</span>
+            <input type="number" id="goalTarget" step="0.01" min="0.01" required placeholder="60000">
+          </div>
+        </label>
+        <label>Target Date
+          <input type="date" id="goalDate">
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelGoalBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveGoalBtn">Create Goal</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Contribution Modal -->
+<div class="modal-overlay" id="contribModalOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Add Contribution</h3>
+      <button class="icon-btn" id="closeContribModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="contribForm" class="modal-body">
+      <input type="hidden" id="contribGoalId" value="">
+      <label>Amount (₹)
+        <div class="amount-input-wrap">
+          <span class="amount-prefix">₹</span>
+          <input type="number" id="contribAmount" step="0.01" min="0.01" required placeholder="0.00">
+        </div>
+      </label>
+      <label>Date
+        <input type="date" id="contribDate">
+      </label>
+      <label>Notes
+        <input type="text" id="contribNotes" placeholder="Optional">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelContribBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Recurring Modal -->
+<div class="modal-overlay" id="recurringModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="recurringModalTitle">Add Recurring Expense</h3>
+      <button class="icon-btn" id="closeRecurringModal"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="recurringForm" class="modal-body">
+      <input type="hidden" id="recurringId" value="">
+      <label>Description
+        <input type="text" id="recurringDescription" required placeholder="e.g. Netflix">
+      </label>
+      <div class="form-row">
+        <label>Amount (₹)
+          <div class="amount-input-wrap">
+            <span class="amount-prefix">₹</span>
+            <input type="number" id="recurringAmount" step="0.01" min="0.01" required placeholder="0.00">
+          </div>
+        </label>
+        <label>Frequency
+          <select id="recurringFrequency">
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly" selected>Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Category
+          <select id="recurringCategory"></select>
+        </label>
+        <label>Payment Method
+          <select id="recurringPayment"></select>
+        </label>
+      </div>
+      <label>Next Payment Date
+        <input type="date" id="recurringNextDate" required>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelRecurringBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveRecurringBtn">Add Recurring</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm Delete (Money-specific) -->
+<div class="modal-overlay" id="moneyConfirmOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3 id="moneyConfirmTitle">Delete?</h3></div>
+    <div class="modal-body">
+      <p id="moneyConfirmText">This action can't be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="moneyConfirmCancel">Cancel</button>
+        <button class="btn btn-danger" id="moneyConfirmOk">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/money.js') }}"></script>{% endblock %}

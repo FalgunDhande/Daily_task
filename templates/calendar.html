@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Calendar - Daily Tracker{% endblock %}
+{% block page_title %}Calendar{% endblock %}
+{% block content %}
+<div id="calendarEl"></div>
+
+<div class="modal-overlay" id="dayModalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="dayModalTitle">Tasks</h3>
+      <button class="icon-btn" id="closeDayModalBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="task-list" id="dayModalTaskList"></div>
+      <button class="btn btn-primary" id="addTaskForDayBtn" style="width:100%; justify-content:center;">
+        <i class="fa-solid fa-plus"></i> Add Task for this Day
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>{% endblock %}

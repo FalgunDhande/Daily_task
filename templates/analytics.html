@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Analytics - Daily Tracker{% endblock %}
+{% block page_title %}Analytics{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+  <div class="stats-grid" id="analyticsStats" style="flex:1;"></div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header"><h3>Daily Completion %</h3></div>
+    <canvas id="dailyPctChart" height="180"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Completed vs Pending</h3></div>
+    <canvas id="completedPendingChart" height="180"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Category Distribution</h3></div>
+    <canvas id="categoryChart" height="180"></canvas>
+  </div>
+  <div class="card">
+    <div class="card-header"><h3>Weekly Productivity Trend</h3></div>
+    <canvas id="weeklyTrendChart" height="180"></canvas>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/analytics.js') }}"></script>{% endblock %}

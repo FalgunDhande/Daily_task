@@ -1,0 +1,427 @@
+{% extends "base.html" %}
+{% block title %}Settings - Daily Tracker{% endblock %}
+{% block page_title %}Settings{% endblock %}
+{% block content %}
+
+<!-- ─── Preferences card ─────────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header"><h3>Preferences</h3></div>
+  <form class="settings-form" id="settingsForm">
+    <label>Name
+      <input type="text" id="setName">
+    </label>
+    <label>Default Task Duration (minutes)
+      <input type="number" id="setDuration" min="5" step="5">
+    </label>
+    <label>Daily Productivity Goal (tasks/habits)
+      <input type="number" id="setGoal" min="1">
+    </label>
+
+    <div class="toggle-row">
+      <span>Week starts on Monday</span>
+      <label class="switch"><input type="checkbox" id="setWeekStart"><span class="slider"></span></label>
+    </div>
+
+    <label>Theme</label>
+    <div class="theme-options">
+      <div class="theme-option" id="themeLightOpt"><i class="fa-solid fa-sun"></i><div>Light</div></div>
+      <div class="theme-option" id="themeDarkOpt"><i class="fa-solid fa-moon"></i><div>Dark</div></div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="align-self:flex-start;">Save Settings</button>
+  </form>
+</div>
+
+<!-- ─── Gmail / Email card ──────────────────────────────────────────── -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header" style="display:flex;align-items:center;gap:.75rem;">
+    <i class="fa-solid fa-envelope" style="font-size:1.25rem;color:var(--accent);"></i>
+    <h3 style="margin:0;">Gmail / Contact Email</h3>
+  </div>
+  <div style="padding:1.25rem 1.5rem;">
+    <p style="margin:0 0 1rem;color:var(--text-secondary);font-size:.9rem;">
+      Add your Gmail address so reminders and notifications can be linked to your inbox.
+    </p>
+    <form id="emailForm" style="display:flex;flex-direction:column;gap:1rem;max-width:480px;">
+      <label style="display:flex;flex-direction:column;gap:.35rem;font-weight:500;">
+        <span style="font-size:.85rem;color:var(--text-secondary);">Gmail Address</span>
+        <div style="position:relative;">
+          <i class="fa-brands fa-google" style="position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:#EA4335;font-size:1rem;pointer-events:none;"></i>
+          <input type="email" id="setEmail" placeholder="you@gmail.com" autocomplete="email"
+            style="padding:.65rem .85rem .65rem 2.6rem;width:100%;border-radius:8px;
+                   border:1px solid var(--border);background:var(--input-bg,var(--bg-secondary));
+                   color:var(--text-primary);font-size:.95rem;box-sizing:border-box;transition:border-color .2s;"
+            onfocus="this.style.borderColor='var(--accent)'"
+            onblur="this.style.borderColor='var(--border)'">
+        </div>
+      </label>
+      <div id="emailStatus" style="display:none;align-items:center;gap:.5rem;font-size:.85rem;color:var(--success,#22c55e);">
+        <i class="fa-solid fa-circle-check"></i><span id="emailStatusText">Email saved!</span>
+      </div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+        <button type="submit" class="btn btn-primary" id="saveEmailBtn">
+          <i class="fa-solid fa-floppy-disk"></i>&nbsp; Save Email
+        </button>
+        <button type="button" class="btn" id="clearEmailBtn"
+                style="background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-secondary);">
+          <i class="fa-solid fa-trash"></i>&nbsp; Clear
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Notification Settings card ─────────────────────────────────── -->
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-header" style="display:flex;align-items:center;gap:.75rem;">
+    <i class="fa-solid fa-bell" style="font-size:1.25rem;color:var(--accent);"></i>
+    <h3 style="margin:0;">Notification Settings</h3>
+  </div>
+
+  <div class="notif-settings-body">
+
+    <!-- Permission status banner -->
+    <div class="notif-permission-banner" id="notifPermissionBanner">
+      <div class="notif-permission-info">
+        <div class="notif-perm-icon" id="notifPermIcon"><i class="fa-solid fa-circle-question"></i></div>
+        <div>
+          <div class="notif-perm-label">Browser Notification Permission</div>
+          <div class="notif-perm-status" id="notifPermStatus">Checking…</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="notifRequestPermBtn" style="white-space:nowrap;">
+        <i class="fa-solid fa-bell"></i> Request Permission
+      </button>
+    </div>
+
+    <!-- Permission denied help text -->
+    <div id="notifDeniedHelp" class="notif-denied-help" hidden>
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <div>
+        <strong>Notifications are blocked.</strong><br>
+        To enable: click the 🔒 lock icon in your browser's address bar → Site settings → Notifications → Allow.
+        Then refresh this page.
+      </div>
+    </div>
+
+    <!-- Toggle switches -->
+    <div class="notif-toggles-grid">
+      <div class="notif-toggle-row">
+        <div class="notif-toggle-info">
+          <i class="fa-regular fa-bell"></i>
+          <div>
+            <div class="ntog-label">Browser Notifications</div>
+            <div class="ntog-desc">Show OS-level desktop notifications</div>
+          </div>
+        </div>
+        <label class="switch"><input type="checkbox" id="notifBrowser" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="notif-toggle-row">
+        <div class="notif-toggle-info">
+          <i class="fa-solid fa-volume-high"></i>
+          <div>
+            <div class="ntog-label">Notification Sound</div>
+            <div class="ntog-desc">Play a chime when a reminder fires</div>
+          </div>
+        </div>
+        <label class="switch"><input type="checkbox" id="notifSound" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="notif-toggle-row">
+        <div class="notif-toggle-info">
+          <i class="fa-solid fa-comment-dots"></i>
+          <div>
+            <div class="ntog-label">In-App Alerts</div>
+            <div class="ntog-desc">Show alert banner when tracker is open</div>
+          </div>
+        </div>
+        <label class="switch"><input type="checkbox" id="notifInApp" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="notif-toggle-row">
+        <div class="notif-toggle-info">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div>
+            <div class="ntog-label">Overdue Alerts</div>
+            <div class="ntog-desc">Notify when a task is past due</div>
+          </div>
+        </div>
+        <label class="switch"><input type="checkbox" id="notifOverdue" checked><span class="slider"></span></label>
+      </div>
+
+      <div class="notif-toggle-row">
+        <div class="notif-toggle-info">
+          <i class="fa-solid fa-clipboard-list"></i>
+          <div>
+            <div class="ntog-label">Daily Summary</div>
+            <div class="ntog-desc">Morning summary of today's tasks</div>
+          </div>
+        </div>
+        <label class="switch"><input type="checkbox" id="notifSummary" checked><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="notif-settings-options">
+      <!-- Sound options -->
+      <div class="notif-option-group" id="soundOptionsGroup">
+        <label class="notif-option-label">
+          <i class="fa-solid fa-music"></i> Sound
+        </label>
+        <select id="notifSoundName" class="notif-select">
+          <option value="default">🎵 Default Chime</option>
+        </select>
+      </div>
+
+      <div class="notif-option-group" id="volumeGroup">
+        <label class="notif-option-label">
+          <i class="fa-solid fa-volume-low"></i> Volume
+          <span id="volumeValue" style="margin-left:auto;font-weight:600;">80%</span>
+        </label>
+        <div class="volume-slider-wrap">
+          <i class="fa-solid fa-volume-off" style="color:var(--text-secondary);font-size:.85rem;"></i>
+          <input type="range" id="notifVolume" min="0" max="100" value="80" class="volume-slider">
+          <i class="fa-solid fa-volume-high" style="color:var(--text-secondary);font-size:.85rem;"></i>
+        </div>
+      </div>
+
+      <!-- Reminder offset -->
+      <div class="notif-option-group">
+        <label class="notif-option-label">
+          <i class="fa-solid fa-clock"></i> Reminder
+        </label>
+        <select id="notifOffset" class="notif-select">
+          <option value="0">At task time</option>
+          <option value="5">5 minutes before</option>
+          <option value="10" selected>10 minutes before</option>
+          <option value="15">15 minutes before</option>
+          <option value="30">30 minutes before</option>
+          <option value="60">1 hour before</option>
+        </select>
+      </div>
+
+      <!-- Daily summary time -->
+      <div class="notif-option-group" id="summaryTimeGroup">
+        <label class="notif-option-label">
+          <i class="fa-solid fa-calendar-day"></i> Daily Summary Time
+        </label>
+        <input type="time" id="notifSummaryTime" value="08:00" class="notif-time-input">
+      </div>
+    </div>
+
+    <!-- Test buttons -->
+    <div class="notif-test-row">
+      <button class="btn notif-test-btn" id="testNotifBtn" type="button">
+        <i class="fa-solid fa-bell"></i> Test Notification
+      </button>
+      <button class="btn notif-test-btn" id="testSoundBtn" type="button">
+        <i class="fa-solid fa-volume-high"></i> Test Sound
+      </button>
+      <button class="btn btn-primary" id="saveNotifBtn" type="button" style="margin-left:auto;">
+        <i class="fa-solid fa-floppy-disk"></i> Save Notification Settings
+      </button>
+    </div>
+
+    <!-- Sound autoplay info -->
+    <div class="notif-autoplay-info">
+      <i class="fa-solid fa-circle-info"></i>
+      <span>
+        Browsers require user interaction before playing audio.
+        Click <strong>Test Sound</strong> once to grant audio permission for this session.
+      </span>
+    </div>
+
+  </div><!-- /notif-settings-body -->
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ─── Helpers ─────────────────────────────────────────────────────────── */
+function showEmailStatus(msg, isError = false) {
+  const el  = document.getElementById('emailStatus');
+  const txt = document.getElementById('emailStatusText');
+  txt.textContent = msg;
+  el.style.color = isError ? 'var(--danger,#ef4444)' : 'var(--success,#22c55e)';
+  el.querySelector('i').className = isError ? 'fa-solid fa-circle-xmark' : 'fa-solid fa-circle-check';
+  el.style.display = 'flex';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+/* ─── Notification permission UI ──────────────────────────────────────── */
+function updatePermissionUI(status) {
+  const iconEl  = document.getElementById('notifPermIcon');
+  const statusEl = document.getElementById('notifPermStatus');
+  const reqBtn  = document.getElementById('notifRequestPermBtn');
+  const denied  = document.getElementById('notifDeniedHelp');
+
+  const map = {
+    unsupported: { icon:'fa-circle-xmark', color:'var(--danger,#ef4444)', label:'Not supported in this browser', hideBtn:true },
+    default:     { icon:'fa-circle-question', color:'var(--warning,#f59e0b)', label:'Permission not yet requested', hideBtn:false },
+    granted:     { icon:'fa-circle-check', color:'var(--success,#22c55e)', label:'Granted ✅', hideBtn:true },
+    denied:      { icon:'fa-circle-xmark', color:'var(--danger,#ef4444)', label:'Denied ❌', hideBtn:true },
+  };
+  const cfg = map[status] || map.default;
+  iconEl.innerHTML = `<i class="fa-solid ${cfg.icon}" style="color:${cfg.color};font-size:1.4rem;"></i>`;
+  statusEl.textContent = cfg.label;
+  statusEl.style.color = cfg.color;
+  if (reqBtn) reqBtn.style.display = cfg.hideBtn ? 'none' : '';
+  if (denied) denied.hidden = status !== 'denied';
+}
+
+function refreshPermissionUI() {
+  if (!window.NotificationManager) return;
+  updatePermissionUI(window.NotificationManager.getPermissionStatus());
+}
+
+/* ─── Load settings ───────────────────────────────────────────────────── */
+async function loadSettings() {
+  const s = await API.get('/api/settings');
+  document.getElementById('setName').value     = s.name || '';
+  document.getElementById('setDuration').value = s.default_task_duration || 30;
+  document.getElementById('setGoal').value      = s.daily_goal || 5;
+  document.getElementById('setWeekStart').checked = !!s.week_starts_monday;
+  document.getElementById('setEmail').value     = s.email || '';
+  highlightTheme(localStorage.getItem('theme') || 'light');
+
+  // Notification prefs from server
+  document.getElementById('notifBrowser').checked  = s.notif_browser  !== false;
+  document.getElementById('notifSound').checked    = s.notif_sound    !== false;
+  document.getElementById('notifInApp').checked    = s.notif_in_app   !== false;
+  document.getElementById('notifOverdue').checked  = s.notif_overdue  !== false;
+  document.getElementById('notifSummary').checked  = s.notif_daily_summary !== false;
+  document.getElementById('notifOffset').value     = s.notif_reminder_offset ?? 10;
+  document.getElementById('notifSummaryTime').value = s.notif_summary_time || '08:00';
+
+  // Local prefs (volume)
+  const prefs = window.NotificationManager ? window.NotificationManager.prefs : {};
+  const vol = Math.round((prefs.volume ?? 0.8) * 100);
+  document.getElementById('notifVolume').value = vol;
+  document.getElementById('volumeValue').textContent = vol + '%';
+}
+
+function highlightTheme(theme) {
+  document.getElementById('themeLightOpt').classList.toggle('selected', theme === 'light');
+  document.getElementById('themeDarkOpt').classList.toggle('selected', theme === 'dark');
+}
+
+/* ─── Init ────────────────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadSettings().catch(err => Toast(err.message, 'error'));
+  refreshPermissionUI();
+
+  /* theme */
+  document.getElementById('themeLightOpt').addEventListener('click', () => {
+    localStorage.setItem('theme', 'light');
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.querySelector('#themeToggleBtn i').className = 'fa-solid fa-moon';
+    highlightTheme('light');
+  });
+  document.getElementById('themeDarkOpt').addEventListener('click', () => {
+    localStorage.setItem('theme', 'dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    document.querySelector('#themeToggleBtn i').className = 'fa-solid fa-sun';
+    highlightTheme('dark');
+  });
+
+  /* preferences form */
+  document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+      await API.put('/api/settings', {
+        name: document.getElementById('setName').value,
+        default_task_duration: parseInt(document.getElementById('setDuration').value, 10),
+        daily_goal: parseInt(document.getElementById('setGoal').value, 10),
+        week_starts_monday: document.getElementById('setWeekStart').checked,
+      });
+      Toast('Settings saved', 'success');
+    } catch (err) { Toast(err.message, 'error'); }
+  });
+
+  /* email form */
+  document.getElementById('emailForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('setEmail').value.trim();
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      showEmailStatus('Please enter a valid email address.', true); return;
+    }
+    try {
+      document.getElementById('saveEmailBtn').disabled = true;
+      await API.put('/api/settings', { email });
+      showEmailStatus(email ? 'Email saved successfully!' : 'Email cleared.');
+    } catch (err) { showEmailStatus(err.message, true); }
+    finally { document.getElementById('saveEmailBtn').disabled = false; }
+  });
+
+  document.getElementById('clearEmailBtn').addEventListener('click', async () => {
+    document.getElementById('setEmail').value = '';
+    try { await API.put('/api/settings', { email: '' }); showEmailStatus('Email cleared.'); }
+    catch (err) { showEmailStatus(err.message, true); }
+  });
+
+  /* permission request */
+  document.getElementById('notifRequestPermBtn').addEventListener('click', async () => {
+    if (!window.NotificationManager) return;
+    window.NotificationManager.markInteracted();
+    const result = await window.NotificationManager.requestPermission();
+    updatePermissionUI(result);
+    if (result === 'granted') Toast('Notifications enabled! ✅', 'success');
+    else if (result === 'denied') Toast('Notifications blocked. See the help text below.', 'error');
+  });
+
+  /* volume slider */
+  document.getElementById('notifVolume').addEventListener('input', (e) => {
+    document.getElementById('volumeValue').textContent = e.target.value + '%';
+  });
+
+  /* save notification settings */
+  document.getElementById('saveNotifBtn').addEventListener('click', async () => {
+    const vol = parseInt(document.getElementById('notifVolume').value, 10) / 100;
+    const payload = {
+      notif_browser:         document.getElementById('notifBrowser').checked,
+      notif_sound:           document.getElementById('notifSound').checked,
+      notif_in_app:          document.getElementById('notifInApp').checked,
+      notif_overdue:         document.getElementById('notifOverdue').checked,
+      notif_daily_summary:   document.getElementById('notifSummary').checked,
+      notif_reminder_offset: parseInt(document.getElementById('notifOffset').value, 10),
+      notif_summary_time:    document.getElementById('notifSummaryTime').value,
+    };
+    try {
+      await API.put('/api/notifications/settings', payload);
+      if (window.NotificationManager) {
+        window.NotificationManager.updatePrefs({ ...payload, volume: vol });
+      }
+      Toast('Notification settings saved ✅', 'success');
+    } catch (err) { Toast(err.message, 'error'); }
+  });
+
+  /* test notification */
+  document.getElementById('testNotifBtn').addEventListener('click', async () => {
+    if (!window.NotificationManager) return Toast('Notification system not ready', 'error');
+    window.NotificationManager.markInteracted();
+    const ok = await window.NotificationManager.testNotification();
+    if (ok) Toast('Test notification fired!', 'success');
+    else    Toast('Could not fire test — check permission.', 'error');
+  });
+
+  /* test sound */
+  document.getElementById('testSoundBtn').addEventListener('click', async () => {
+    if (!window.NotificationManager) return Toast('Notification system not ready', 'error');
+    window.NotificationManager.markInteracted();
+    const vol = parseInt(document.getElementById('notifVolume').value, 10) / 100;
+    await window.NotificationManager.playSound(vol);
+    Toast('🔊 Sound played!', 'success');
+  });
+
+  /* Dismiss button alias */
+  const dismissAlt = document.getElementById('notifAlertDismissBtn');
+  if (dismissAlt) {
+    dismissAlt.addEventListener('click', () => {
+      const el = document.getElementById('notifAlert');
+      if (el) { el.classList.remove('notif-visible'); el.classList.add('notif-hidden'); }
+    });
+  }
+});
+</script>
+{% endblock %}

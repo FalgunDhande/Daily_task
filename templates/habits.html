@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Habits - Daily Tracker{% endblock %}
+{% block page_title %}Habits{% endblock %}
+{% block content %}
+<div class="card-header" style="margin-bottom:16px;">
+  <h3 style="margin:0;">Habit Tracker</h3>
+  <button class="btn btn-primary" id="openAddHabitBtn"><i class="fa-solid fa-plus"></i> Add Habit</button>
+</div>
+
+<div class="card">
+  <div class="habit-table-wrap" id="habitTableWrap"><div class="loader"><div class="spinner"></div>Loading...</div></div>
+</div>
+
+<div class="modal-overlay" id="habitModalOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header">
+      <h3>Add Habit</h3>
+      <button class="icon-btn" id="closeHabitModalBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="habitForm" class="modal-body">
+      <label>Habit Name
+        <input type="text" id="habitName" required placeholder="e.g. Read">
+      </label>
+      <label>Target Frequency
+        <select id="habitFrequency">
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="custom">Custom (times/week)</option>
+        </select>
+      </label>
+      <label>Target count per week
+        <input type="number" id="habitTargetCount" min="1" max="7" value="7">
+      </label>
+      <label>Goal (optional)
+        <input type="text" id="habitGoal" placeholder="e.g. Read 20 pages a day">
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelHabitBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Habit</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/habits.js') }}"></script>{% endblock %}

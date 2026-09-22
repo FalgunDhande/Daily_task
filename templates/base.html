@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Daily Tracker{% endblock %}</title>
+<!-- PWA -->
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<!-- Styles & Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.11/index.global.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <i class="fa-solid fa-list-check"></i>
+      <span>Daily Tracker</span>
+    </div>
+    <nav class="nav-links">
+      <div class="nav-section-label">Productivity</div>
+      <a href="{{ url_for('views.dashboard') }}" class="{{ 'active' if active=='dashboard' else '' }}"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a>
+      <a href="{{ url_for('views.today') }}" class="{{ 'active' if active=='today' else '' }}"><i class="fa-solid fa-calendar-day"></i><span>Today</span></a>
+      <a href="{{ url_for('views.tasks') }}" class="{{ 'active' if active=='tasks' else '' }}"><i class="fa-solid fa-list-check"></i><span>Tasks</span></a>
+      <a href="{{ url_for('views.calendar') }}" class="{{ 'active' if active=='calendar' else '' }}"><i class="fa-regular fa-calendar"></i><span>Calendar</span></a>
+      <a href="{{ url_for('views.habits') }}" class="{{ 'active' if active=='habits' else '' }}"><i class="fa-solid fa-repeat"></i><span>Habits</span></a>
+      <a href="{{ url_for('views.analytics') }}" class="{{ 'active' if active=='analytics' else '' }}"><i class="fa-solid fa-chart-line"></i><span>Analytics</span></a>
+      <div class="nav-section-label">Finance</div>
+      <a href="{{ url_for('views.money') }}" class="{{ 'active' if active=='money' else '' }}"><i class="fa-solid fa-wallet"></i><span>Money</span></a>
+      <div class="nav-section-label">General</div>
+      <a href="{{ url_for('views.history') }}" class="{{ 'active' if active=='history' else '' }}"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></a>
+      <a href="{{ url_for('views.settings') }}" class="{{ 'active' if active=='settings' else '' }}"><i class="fa-solid fa-gear"></i><span>Settings</span></a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburgerBtn" aria-label="Toggle menu"><i class="fa-solid fa-bars"></i></button>
+      <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="reminderBtn" title="Reminders"><i class="fa-regular fa-bell"></i><span class="badge" id="reminderBadge" hidden>0</span></button>
+        <button class="icon-btn" id="themeToggleBtn" title="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+        <button class="btn btn-primary" id="openAddTaskBtn"><i class="fa-solid fa-plus"></i> Add Task</button>
+      </div>
+    </header>
+    <main class="content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<!-- ─── Task modal ─────────────────────────────────────────────────────── -->
+<div class="modal-overlay" id="taskModalOverlay">
+  <div class="modal" id="taskModal">
+    <div class="modal-header">
+      <h3 id="taskModalTitle">Add New Task</h3>
+      <button class="icon-btn" id="closeTaskModalBtn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <form id="taskForm" class="modal-body">
+      <input type="hidden" id="taskId" value="">
+      <label>Task Name
+        <input type="text" id="taskTitle" required placeholder="e.g. Study Python">
+      </label>
+      <div class="form-row">
+        <label>Category
+          <select id="taskCategory"></select>
+        </label>
+        <label>Priority
+          <select id="taskPriority">
+            <option>Low</option><option selected>Medium</option><option>High</option><option>Urgent</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Date
+          <input type="date" id="taskDate" required>
+        </label>
+        <label>Time
+          <input type="time" id="taskTime">
+        </label>
+      </div>
+      <div class="form-row">
+        <label>Time of Day
+          <select id="taskTimeBlock">
+            <option>Morning</option><option>Afternoon</option><option>Evening</option><option>Night</option>
+          </select>
+        </label>
+        <label>Recurring
+          <select id="taskRecurrence">
+            <option value="none">None</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="custom">Custom weekdays</option>
+          </select>
+        </label>
+      </div>
+      <label id="customDaysWrap" hidden>Repeat on
+        <div class="weekday-picker" id="weekdayPicker">
+          <button type="button" data-day="0">Mon</button>
+          <button type="button" data-day="1">Tue</button>
+          <button type="button" data-day="2">Wed</button>
+          <button type="button" data-day="3">Thu</button>
+          <button type="button" data-day="4">Fri</button>
+          <button type="button" data-day="5">Sat</button>
+          <button type="button" data-day="6">Sun</button>
+        </div>
+      </label>
+      <label>Reminder time (optional)
+        <input type="time" id="taskReminder">
+      </label>
+      <label>Notes
+        <textarea id="taskNotes" rows="3" placeholder="Optional notes..."></textarea>
+      </label>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelTaskBtn">Cancel</button>
+        <button type="submit" class="btn btn-primary" id="saveTaskBtn">Add Task</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ─── Confirm delete modal ───────────────────────────────────────────── -->
+<div class="modal-overlay" id="confirmModalOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header"><h3>Delete task?</h3></div>
+    <div class="modal-body">
+      <p>This action can't be undone.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelDeleteBtn">Cancel</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── In-App Notification Alert ─────────────────────────────────────── -->
+<div id="notifAlert" class="notif-alert notif-hidden" role="alertdialog" aria-modal="true" aria-labelledby="notifAlertTitle">
+  <div class="notif-alert-icon">🔔</div>
+  <div class="notif-alert-content">
+    <div class="notif-alert-header">
+      <strong id="notifAlertTitle">Task Reminder</strong>
+      <button class="notif-alert-close" id="notifAlertDismiss" aria-label="Dismiss"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div id="notifAlertBody" class="notif-alert-body"></div>
+    <div class="notif-alert-actions">
+      <button class="btn btn-primary notif-alert-btn" id="notifAlertOpen" data-task-id="0">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Task
+      </button>
+      <button class="btn btn-ghost notif-alert-btn" id="notifAlertDismissBtn">
+        Dismiss
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Toast container ────────────────────────────────────────────────── -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.11/index.global.min.js"></script>
+<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

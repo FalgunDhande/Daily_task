@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Tasks - Daily Tracker{% endblock %}
+{% block page_title %}Tasks{% endblock %}
+{% block content %}
+<div class="filters-bar">
+  <div class="search-input-wrap">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <input type="text" id="searchInput" placeholder="Search tasks...">
+  </div>
+  <select id="filterCategory"><option value="">All Categories</option></select>
+  <select id="filterPriority">
+    <option value="">All Priorities</option>
+    <option>Low</option><option>Medium</option><option>High</option><option>Urgent</option>
+  </select>
+  <select id="filterStatus">
+    <option value="">All Status</option>
+    <option value="pending">Pending</option>
+    <option value="completed">Completed</option>
+  </select>
+  <select id="filterOverdue">
+    <option value="">All Dates</option>
+    <option value="true">Overdue Only</option>
+  </select>
+  <select id="sortBy">
+    <option value="due_date">Sort: Due Date</option>
+    <option value="priority">Sort: Priority</option>
+  </select>
+</div>
+
+<div class="card">
+  <div class="card-header"><h3 id="taskCountHeading">All Tasks</h3></div>
+  <div class="task-list" id="taskListContainer"><div class="loader"><div class="spinner"></div>Loading...</div></div>
+</div>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/tasks.js') }}"></script>{% endblock %}
