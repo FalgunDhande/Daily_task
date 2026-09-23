@@ -6,11 +6,15 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 def _build_db_url():
     url = os.environ.get("DATABASE_URL")
     if url:
-        # Render / Heroku give postgres:// URLs; SQLAlchemy needs postgresql://
+        # Render / Heroku may give legacy postgres:// scheme
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql://", 1)
+        # psycopg3 (psycopg[binary]) requires the +psycopg dialect in SQLAlchemy.
+        # Render gives plain postgresql:// so we rewrite it here.
+        if url.startswith("postgresql://") and "+psycopg" not in url:
+            url = url.replace("postgresql://", "postgresql+psycopg://", 1)
         return url
-    # Local development fallback → SQLite
+    # Local development fallback → SQLite (no driver needed)
     return f"sqlite:///{os.path.join(BASE_DIR, 'instance', 'tracker.db')}"
 
 
