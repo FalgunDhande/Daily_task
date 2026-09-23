@@ -50,12 +50,18 @@ def create_app(config_class=Config):
             # `flask db upgrade` before gunicorn, so create_all() is skipped.
             db.create_all()
 
-        # Seed idempotent default data (only inserts if tables are empty)
+        # Seed idempotent default data — only when tables already exist.
+        # During `flask db upgrade`, the app is imported before migrations run,
+        # so tables may not exist yet. We skip silently in that case.
         try:
-            from seed import run_seed
-            run_seed()
+            from sqlalchemy import inspect as sa_inspect
+            inspector = sa_inspect(db.engine)
+            if inspector.has_table("user"):
+                from seed import run_seed
+                run_seed()
         except Exception as exc:
             logger.error("Seed error: %s", exc)
+
 
     # ── Scheduler ─────────────────────────────────────────────────────────────
     # Start outside the app_context block so it holds its own contexts
