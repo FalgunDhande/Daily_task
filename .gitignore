@@ -1,9 +1,23 @@
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 venv/
 env/
+
+# SQLite local database — never commit
 instance/*.db
+instance/
+
+# Real credentials — never commit
 .env
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Logs
 *.log
+
+# Alembic compiled migration cache (keep .py migration files, drop .pyc)
+migrations/versions/__pycache__/

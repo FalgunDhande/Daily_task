@@ -1,18 +1,28 @@
+import logging
 import os
 from datetime import datetime, timedelta, date
-from flask import Flask
+from flask import Flask, jsonify
+from flask_migrate import Migrate
 from config import Config
 from models import db
+
+logger = logging.getLogger(__name__)
 
 
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
 
+    # Ensure the instance folder exists (needed for local SQLite)
     os.makedirs(os.path.join(app.root_path, "instance"), exist_ok=True)
 
+    # ── Database ──────────────────────────────────────────────────────────────
     db.init_app(app)
 
+    # Flask-Migrate / Alembic — manages schema via migrations/
+    Migrate(app, db)
+
+    # ── Blueprints ────────────────────────────────────────────────────────────
     from routes.views import views_bp
     from routes.tasks import tasks_bp
     from routes.habits import habits_bp
@@ -31,14 +41,48 @@ def create_app(config_class=Config):
     app.register_blueprint(notifications_bp)
     app.register_blueprint(money_bp)
 
+    # ── Schema & seed ─────────────────────────────────────────────────────────
     with app.app_context():
-        db.create_all()
-        from seed import run_seed
-        run_seed()
+        if not app.config.get("IS_PRODUCTION"):
+            # Local development: create tables automatically so `python app.py`
+            # works out of the box without needing to run flask db commands.
+            # In production (DATABASE_URL is set), the Procfile runs
+            # `flask db upgrade` before gunicorn, so create_all() is skipped.
+            db.create_all()
 
-    # Start scheduler outside the app_context block so it holds its own contexts
+        # Seed idempotent default data (only inserts if tables are empty)
+        try:
+            from seed import run_seed
+            run_seed()
+        except Exception as exc:
+            logger.error("Seed error: %s", exc)
+
+    # ── Scheduler ─────────────────────────────────────────────────────────────
+    # Start outside the app_context block so it holds its own contexts
     _start_scheduler(app)
 
+    # ── Health check ──────────────────────────────────────────────────────────
+    @app.route("/health")
+    def health():
+        """
+        GET /health → {"status": "ok", "db": "ok"}
+
+        Used by Render's health-check and for manual verification after deploy.
+        Never exposes credentials or internal stack traces.
+        """
+        db_status = "ok"
+        try:
+            # A lightweight query that works on both SQLite and PostgreSQL
+            db.session.execute(db.text("SELECT 1"))
+        except Exception as exc:
+            logger.error("Health check DB error: %s", exc)
+            db_status = "error"
+
+        status_code = 200 if db_status == "ok" else 503
+        return jsonify({"status": "ok" if db_status == "ok" else "degraded",
+                        "db": db_status}), status_code
+
+    # ── Error handlers ────────────────────────────────────────────────────────
     @app.errorhandler(404)
     def not_found(e):
         return {"error": "Not found"}, 404
@@ -56,6 +100,7 @@ def _start_scheduler(app):
     Start the APScheduler background tick.
     - Every 60 s: create Reminder rows for tasks that don't have one yet.
     - Every 5 min: create overdue Reminder rows for past-due pending tasks.
+    - Every 1 h: process recurring financial transactions.
     Skipped gracefully in Werkzeug reloader child processes to avoid double scheduler.
     """
     # In Werkzeug debug mode the reloader forks a child process.
@@ -93,7 +138,7 @@ def _start_scheduler(app):
         scheduler.start()
         app._scheduler = scheduler  # keep reference so GC doesn't kill it
     except Exception as exc:
-        print(f"[Scheduler] Could not start: {exc}")
+        logger.warning("[Scheduler] Could not start: %s", exc)
 
 
 def _tick_reminders(app):
@@ -137,7 +182,7 @@ def _tick_reminders(app):
             db.session.commit()
         except Exception as exc:
             db.session.rollback()
-            print(f"[Scheduler] tick_reminders error: {exc}")
+            logger.error("[Scheduler] tick_reminders error: %s", exc)
 
 
 def _tick_overdue(app):
@@ -173,7 +218,7 @@ def _tick_overdue(app):
             db.session.commit()
         except Exception as exc:
             db.session.rollback()
-            print(f"[Scheduler] tick_overdue error: {exc}")
+            logger.error("[Scheduler] tick_overdue error: %s", exc)
 
 
 def _tick_recurring_money(app):
@@ -184,10 +229,10 @@ def _tick_recurring_money(app):
         try:
             count = process_recurring_transactions()
             if count:
-                print(f"[Scheduler] Processed {count} recurring transactions")
+                logger.info("[Scheduler] Processed %d recurring transactions", count)
         except Exception as exc:
             db.session.rollback()
-            print(f"[Scheduler] recurring_money error: {exc}")
+            logger.error("[Scheduler] recurring_money error: %s", exc)
 
 
 app = create_app()
